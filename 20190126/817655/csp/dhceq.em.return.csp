@@ -1,0 +1,117 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<HISUI/>
+</head>
+<script language=Cache runat=server>
+	s RRowID=$Get(%request.Data("RowID",1))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	s QXType=$Get(%request.Data("QXType",1))
+	s ApproveRoleDR=$Get(%request.Data("ApproveRoleDR",1))
+	s WaitAD=$Get(%request.Data("WaitAD",1))
+	s CancelOper=$Get(%request.Data("CancelOper",1))
+	s CurRole=$Get(%request.Data("CurRole",1))
+	s Action=$Get(%request.Data("Action",1))
+	s ROutTypeDR=$Get(%request.Data("ROutTypeDR",1))
+	s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("15",RRowID),CurRole,Action)
+	s RReturnDate=##class(web.DHCEQCommon).TransValueToPage(+$H,"date")
+	s RReturnLocDR=%session.Get("LOGON.CTLOCID")
+	s RReturnLoc=##class(web.DHCEQCommon).GetTrakNameByID("dept",RReturnLocDR)
+	s REquipTypeDR=##class(web.DHCEQCommon).GetDefaultEquipType(1)
+	s REquipType=##class(web.DHCEQCommon).GetDefaultEquipType(2)
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s ReturnDepreFlag=##class(web.DHCEQCommon).GetSysInfo("302012")
+	s HospitalDesc=##Class(web.DHCEQCommon).GetHospitalDesc()
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062")
+	s EquipDR=$Get(%request.Data("EquipDR",1))	//add by csj 20190125
+
+</script>
+
+<body class="hisui-layout" >
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" title="退货单" data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:100px;">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cRReturnNo" for="RReturnNo">退货单号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RReturnNo" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cREquipTypeDR_ETDesc" for="REquipTypeDR_ETDesc">管理类组</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EquipType'" id="REquipTypeDR_ETDesc" value="#(REquipType)#"></div>
+						<div class="eq-table-td eq-table-label"><label id="cRReturnLocDR_CTLOCDesc" for="RReturnLocDR_CTLOCDesc">库房</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="RReturnLocDR_CTLOCDesc" value="#(RReturnLoc)#"></div>
+						<div class="eq-table-td "><a id="BSave" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-save"  data-options="stopAllEventOnDisabled:true">保存</a></div>
+						<div class="eq-table-td "><a id="BDelete" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-close"  data-options="stopAllEventOnDisabled:true">删除</a></div>
+						<div class="eq-table-td "><a id="BPrint" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-print"  data-options="stopAllEventOnDisabled:true">打印</a></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cRProviderDR_VDesc" for="RProviderDR_VDesc">供应商</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Vendor'" id="RProviderDR_VDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cRReturnDate" for="RReturnDate">制单日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="RReturnDate" value="#(RReturnDate)#"></div>
+						<div class="eq-table-td eq-table-label" ><label id="cRRemark" for="RRemark" >备注</label></div>
+						<div class="eq-table-td eq-table-input" ><textarea id="RRemark" style="width:150px" colspan="2"></textarea></div>
+						<div class="eq-table-td "><a id="BSubmit" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-submit"  data-options="stopAllEventOnDisabled:true">提交</a></div>
+						<div class="eq-table-td "><a id="BApprove1" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-stamp"  data-options="stopAllEventOnDisabled:true">审核</a>
+												  <a id="BApprove2" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-stamp"  data-options="stopAllEventOnDisabled:true">审核</a>
+												  <a id="BApprove3" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-stamp"  data-options="stopAllEventOnDisabled:true">审核</a></div>
+						<div class="eq-table-td "><a id="BCancelSubmit" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-stamp"  data-options="stopAllEventOnDisabled:true">取消提交</a></div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="padding:0px;position:relative">
+					<table id="DHCEQReturn" class="hisui-datagrid" data-options="onClickRow:onClickRow,border:false"></table>
+					<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;">合计</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="RRowID" value="#(RRowID)#">
+			<INPUT type="hidden" id="RReturnLocDR" value="#(RReturnLocDR)#">
+			<INPUT type="hidden" id="StockStatus" value="1">
+			<INPUT type="hidden" id="RStatus" value="">
+			<INPUT type="hidden" id="RProviderDR" value="">
+			<INPUT type="hidden" id="REquipTypeDR" value="#(REquipTypeDR)#">
+			<INPUT type="hidden" id="RStatCatDR" value="">
+			
+			<INPUT type="hidden" id="QXType" value="#(QXType)#">
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+			<INPUT type="hidden" id="CurRole" value="#(CurRole)#">
+			<INPUT type="hidden" id="ApproveRoleDR" value="#(ApproveRoleDR)#">
+			<INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
+			<INPUT type="hidden" id="CancelOper" value="#(CancelOper)#">
+			
+			<INPUT type="hidden" id="RoleStep" value=#(RoleStep)#>
+			<INPUT type="hidden" id="CurDate" value=#(CurDate)#>
+			<INPUT type="hidden" id="NextFlowStep">
+			<INPUT type="hidden" id="ApproveSetDR">
+			<INPUT type="hidden" id="NextRoleDR">
+			<INPUT type="hidden" id="CancelFlag">
+			<INPUT type="hidden" id="RJob">
+			<INPUT type="hidden" id="CancelToFlowDR">
+			<INPUT type="hidden" id="ApproveStatus">
+			<INPUT type="hidden" id="ApproveTypeCode" value=13>
+			<INPUT type="hidden" id="ROutTypeDR" value=#(ROutTypeDR)#>
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="HospitalDesc" value=#(HospitalDesc)#>
+			<INPUT type="hidden" id="ReturnDepreFlag" value=#(ReturnDepreFlag)#>
+			<INPUT type="hidden" id="PrintFlag" value=#(PrintFlag)#>
+			<INPUT type="hidden" id="EquipDR" value=#(EquipDR)#>
+			
+			
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/return.js'></script>
+
+</body>
+</html>
